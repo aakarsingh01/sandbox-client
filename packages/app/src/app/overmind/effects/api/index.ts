@@ -39,12 +39,23 @@ export default {
     return response.jwt;
   },
   async getSandpackTokenFromTeam(teamId: string): Promise<string> {
-    const response = await api.post<{ token: string }>(
-      `/sandpack/token/${teamId}`,
-      {}
-    );
+    // Open-source version: return configured token or throw error
+    const envToken = (window as any).SANDPACK_TOKEN || (window as any).CODESANDBOX_TOKEN;
+    if (envToken) {
+      return envToken;
+    }
+    
+    // For backward compatibility, try localStorage
+    try {
+      const storedToken = localStorage.getItem('sandpack_token');
+      if (storedToken) {
+        return storedToken;
+      }
+    } catch (e) {
+      console.warn('Unable to access localStorage for sandpack token');
+    }
 
-    return response.token;
+    throw new Error('No sandpack token available. Please configure SANDPACK_TOKEN environment variable or use anonymous mode.');
   },
   getCurrentUser(): Promise<CurrentUserFromAPI> {
     return api.get('/users/current');

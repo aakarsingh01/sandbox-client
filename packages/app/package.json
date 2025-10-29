@@ -8,8 +8,8 @@
     "directory": "packages/app"
   },
   "scripts": {
-    "build": "cross-env NODE_ENV=production NODE_OPTIONS=\"--max-old-space-size=4096\"   node scripts/build.js && touch ./www/index.html",
-    "build:stats": "cross-env NODE_ENV=production NODE_OPTIONS=\"--max-old-space-size=4096\"   webpack --env production --config config/webpack.prod.js --json --profile --progress > stats.json && node scripts/stats",
+    "build": "cross-env NODE_ENV=production NODE_OPTIONS=\"--max-old-space-size=8192\"   node scripts/build.js && touch ./www/index.html",
+    "build:stats": "cross-env NODE_ENV=production NODE_OPTIONS=\"--max-old-space-size=8192\"   webpack --env production --config config/webpack.prod.js --json --profile --progress > stats.json && node scripts/stats",
     "build:clean": "rimraf www",
     "graphql:replace-schema": "node scripts/replace-gql-schema",
     "generate:graphql": "npx graphql-cli get-schema -e prod --project app && yarn graphql:replace-schema && graphql-codegen --config ./scripts/codegen.js",
@@ -26,7 +26,7 @@
     "lint:app": "cross-env LINT=1 eslint --ext .js,.ts,.tsx src/app",
     "lint:embed": "cross-env LINT=1 eslint --ext .js,.ts,.tsx src/embed",
     "lint:sandbox": "cross-env LINT=1 eslint --ext .js,.ts,.tsx src/sandbox",
-    "start": "cross-env LOCAL_SERVER=1 NODE_OPTIONS=\"--max-old-space-size=4096\" node scripts/start.js",
+    "start": "cross-env LOCAL_SERVER=1 NODE_OPTIONS=\"--max-old-space-size=8192\" node scripts/start.js",
     "start:dev_api": "node scripts/start.js",
     "start:app": "cross-env APP_ONLY=true LOCAL_SERVER=1 node scripts/start.js",
     "start:app:stream": "cross-env ENDPOINT=https://codesandbox.stream cross-env APP_ONLY=true LOCAL_SERVER=1 node scripts/start.js",

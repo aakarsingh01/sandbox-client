@@ -5,7 +5,7 @@ module.exports = {
   babelrc: false,
   cacheDirectory: true,
   cacheCompression: true,
-  compact: true,
+  compact: 'auto',
   presets: [
     require.resolve('@babel/preset-flow'),
     // Latest stable ECMAScript features

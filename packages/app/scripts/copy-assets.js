@@ -46,6 +46,11 @@ assets.forEach(({ from, to }) => {
   const dstPath = path.resolve(buildPath, to);
   console.log(`${srcPath} => ${dstPath}`);
 
-  // We need to deference symlinks to prevent recursion
-  fs.copySync(srcPath, dstPath, { dereference: true });
+  // Check if source exists before copying
+  if (fs.existsSync(srcPath)) {
+    // We need to deference symlinks to prevent recursion
+    fs.copySync(srcPath, dstPath, { dereference: true });
+  } else {
+    console.warn(`Warning: Source path does not exist: ${srcPath}`);
+  }
 });

@@ -1,0 +1,24 @@
+{
+  "name": "sandpack-integration-tests",
+  "version": "1.0.0",
+  "description": "Integration tests for Sandpack open-source functionality",
+  "main": "test-runner.js",
+  "scripts": {
+    "test": "node test-runner.js",
+    "start": "node test-runner.js"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "keywords": [
+    "sandpack",
+    "test",
+    "integration",
+    "codesandbox",
+    "librechat"
+  ],
+  "author": "LibreChat-AI",
+  "license": "GPL-3.0"
+}

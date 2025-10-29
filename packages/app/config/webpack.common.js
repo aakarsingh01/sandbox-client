@@ -159,7 +159,7 @@ module.exports = {
           new RegExp(`${sepRe}node_modules${sepRe}.*babel-plugin-macros`),
           new RegExp(`sandbox-hooks`),
           new RegExp(`template-icons`),
-          new RegExp(`${sepRe}node_modules${sepRe}.*react-devtools-inline`),
+          new RegExp(`${sepRe}node_modules${sepRe}.*react-devtools-inline(?!.*frontend\.js)`),
           new RegExp(
             `${sepRe}node_modules${sepRe}.*@codesandbox${sepRe}sandpack-react`
           ),
@@ -196,6 +196,34 @@ module.exports = {
             '@babel/plugin-proposal-optional-chaining',
             '@babel/plugin-proposal-numeric-separator',
             '@babel/plugin-proposal-nullish-coalescing-operator',
+          ],
+        },
+      },
+      // Special handling for large files that cause Babel deoptimization
+      {
+        test: [
+          new RegExp(`${sepRe}node_modules${sepRe}.*react-devtools-inline.*frontend\.js$`),
+          new RegExp(`${sepRe}node_modules${sepRe}.*react-devtools-inline_legacy.*frontend\.js$`),
+          new RegExp(`${sepRe}LinterWorker${sepRe}node_modules${sepRe}lodash${sepRe}lodash\.js$`),
+          new RegExp(`${sepRe}LinterWorker${sepRe}node_modules${sepRe}typescript${sepRe}lib${sepRe}typescript\.js$`),
+        ],
+        loader: 'babel-loader',
+        options: {
+          cacheDirectory: true,
+          compact: false, // Disable compact mode for large files
+          presets: [
+            [
+              '@babel/preset-env',
+              {
+                targets: ['>0.25%', 'not ie 11', 'not op_mini all'],
+                modules: 'umd',
+                useBuiltIns: false,
+              },
+            ],
+          ],
+          plugins: [
+            '@babel/plugin-transform-template-literals',
+            '@babel/plugin-transform-destructuring',
           ],
         },
       },

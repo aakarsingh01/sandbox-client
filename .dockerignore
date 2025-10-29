@@ -1,30 +1,99 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
-# dependencies
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Dependencies (will be installed during build)
 node_modules
-# we use yarn
+**/node_modules
+.pnp
+.pnp.js
+
+# Package-specific build artifacts  
+packages/*/node_modules
+packages/*/build
+packages/*/dist
+packages/*/www
+packages/*/lib
+
+# Package managers
 package-lock.json
+yarn-error.log
+npm-debug.log*
+yarn-debug.log*
+lerna-debug.log
 
-/integration-tests/**/__diff_output__
-
-# testing
+# Testing
 coverage
+**/__tests__
+**/*.test.*
+**/*.spec.*
+/integration-tests/**/__diff_output__
+jest
 
-# production
+# Development
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Production builds (will be created during build)
 build
 www
 .deliver
-
-# misc
-.DS_Store
-npm-debug.log
-yarn-error.log
-.idea
-jest
-
-lerna-debug.log
-
-standalone-packages/monaco-editor-core
-
+dist
 .next
+.nuxt
 .cache-loader
+
+# Documentation
+*.md
+!README.md
+docs/
+**/*.md
+!packages/**/README.md
+
+# Standalone packages that might be large
+standalone-packages/monaco-editor-core
+standalone-packages/vscode-extensions
+standalone-packages/codesandbox-browserfs
+standalone-packages/vscode-textmate
+standalone-packages/monaco-typescript
+standalone-packages/vscode-editor
+standalone-packages/monaco-editor
+standalone-packages/resolver
+standalone-packages/*/node_modules
+standalone-packages/*/dist
+standalone-packages/*/build
+
+# Large build artifacts
+www
+
+# Cache directories
+.cache
+.parcel-cache
+.eslintcache
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp

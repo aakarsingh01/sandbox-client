@@ -1,0 +1,80 @@
+# ===============================================
+# OPTIMIZED DOCKERFILE FOR CODESANDBOX CLIENT
+# ===============================================
+# Focused on fixing the Babel build issues with large files
+
+FROM node:16-bullseye AS base
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies for building native modules
+RUN apt-get update && apt-get install -y \
+    git \
+    python3 \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Enable corepack and prepare yarn
+RUN corepack enable && corepack prepare yarn@1.22.19 --activate
+
+# Set environment variables for optimal builds
+ENV NODE_ENV=production
+ENV NODE_OPTIONS="--max-old-space-size=8192"
+
+# Copy package management files first for better Docker layer caching
+COPY package.json yarn.lock lerna.json .yarnrc ./
+
+# Copy source code
+COPY . .
+
+# Install all dependencies
+RUN yarn install --frozen-lockfile --production=false
+
+# Build the application with optimized settings
+RUN yarn build:deps && \
+    yarn build:sandpack && \
+    yarn build:prod
+
+# Clean up cache and unnecessary files
+RUN yarn cache clean && \
+    rm -rf .git && \
+    find . -name "*.md" -not -path "./node_modules/*" -delete
+
+# ===============================================
+# Production Runtime with Nginx
+# ===============================================
+FROM nginx:1.25.3-alpine AS production
+
+# Install additional utilities
+RUN apk add --no-cache \
+    curl \
+    wget \
+    ca-certificates
+
+# Copy built application
+COPY --from=base /app/www /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+
+# Create nginx user and set proper permissions
+RUN addgroup -g 101 -S nginx 2>/dev/null || true && \
+    adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx 2>/dev/null || true && \
+    chown -R nginx:nginx /usr/share/nginx/html && \
+    chown -R nginx:nginx /var/cache/nginx && \
+    chown -R nginx:nginx /var/log/nginx && \
+    chown -R nginx:nginx /etc/nginx/conf.d
+
+# Set proper permissions for web content
+RUN chmod -R 755 /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+# Add health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost/ || exit 1
+
+# Run nginx in foreground
+CMD ["nginx", "-g", "daemon off;"]

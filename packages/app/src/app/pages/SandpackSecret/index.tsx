@@ -21,38 +21,44 @@ const SandpackSecret = () => {
   }, [genericPageMounted]);
 
   useEffect(() => {
-    if (hasLogIn) {
-      setError(null);
+    // In open-source mode, we simplify the authentication flow
+    const listener = async (event: MessageEvent) => {
+      if (event.data && event.data.$type === 'request-sandpack-secret') {
+        const teamId = params.teamId;
 
-      const listener = async (event: MessageEvent) => {
-        if (event.data && event.data.$type === 'request-sandpack-secret') {
-          const teamId = params.teamId;
+        try {
+          // Try to get token from our open-source method
+          const token = await api.getSandpackTokenFromTeam(teamId);
+          
+          (event.source as WindowProxy).postMessage(
+            { $type: 'sandpack-secret', token },
+            event.origin
+          );
 
-          api
-            .getSandpackTokenFromTeam(teamId)
-            .then(async token => {
-              (event.source as WindowProxy).postMessage(
-                { $type: 'sandpack-secret', token },
-                event.origin
-              );
-
-              window.removeEventListener('message', listener);
-            })
-            .catch(e => {
-              setError(
-                "CodeSandbox couldn't authenticate. Make sure you belong to this team."
-              );
-            });
+          window.removeEventListener('message', listener);
+        } catch (e) {
+          setError(
+            "No authentication token available. Please configure SANDPACK_TOKEN or use anonymous mode."
+          );
+          
+          // Still send a message to close the flow, but with no token
+          (event.source as WindowProxy).postMessage(
+            { $type: 'sandpack-secret', token: null },
+            event.origin
+          );
+          
+          window.removeEventListener('message', listener);
         }
-      };
+      }
+    };
 
-      window.addEventListener('message', listener);
-    }
-  }, [hasLogIn]);
+    window.addEventListener('message', listener);
+    
+    return () => window.removeEventListener('message', listener);
+  }, [api, params.teamId]);
 
-  if (!hasLogIn) {
-    return <Redirect to={signInPageUrl(location.pathname)} />;
-  }
+  // In open-source mode, we don't require traditional login
+  // The authentication is handled via tokens
 
   return (
     <ThemeProvider>
@@ -94,11 +100,19 @@ const SandpackSecret = () => {
           </Stack>
 
           <Text css={{ textAlign: 'center' }}>
-            Hang on, we are authenticating Sandpack.
-            <br />
-            {error
-              ? 'Error: ' + error
-              : 'This page will close automatically in a few seconds.'}
+            {error ? (
+              <>
+                Authentication Error
+                <br />
+                {error}
+              </>
+            ) : (
+              <>
+                Authenticating Sandpack...
+                <br />
+                This window will close automatically.
+              </>
+            )}
           </Text>
         </Stack>
       </Element>

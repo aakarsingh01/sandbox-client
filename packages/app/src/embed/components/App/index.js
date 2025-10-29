@@ -1,11 +1,10 @@
 import * as React from 'react';
 import { ThemeProvider } from 'styled-components';
 import { camelizeKeys } from 'humps';
-import getTemplateDefinition from '@codesandbox/common/lib/templates';
-import type { Module, Sandbox } from '@codesandbox/common/lib/types';
-import Centered from '@codesandbox/common/lib/components/flex/Centered';
-import track from '@codesandbox/common/lib/utils/analytics';
-import { getSandboxOptions } from '@codesandbox/common/lib/url';
+import getTemplateDefinition from '../../utils/templates';
+import Centered from '../../utils/Centered';
+import track from '../../utils/analytics';
+import { getSandboxOptions } from '../../utils/url';
 import {
   SandpackCodeEditor,
   SandpackFileExplorer,
@@ -16,12 +15,12 @@ import {
 import {
   findCurrentModule,
   findMainModule,
-} from '@codesandbox/common/lib/sandbox/modules';
-import { isIOS, isAndroid } from '@codesandbox/common/lib/utils/platform';
+} from '../../utils/modules';
+import { isIOS, isAndroid } from '../../utils/platform';
 import { Title } from 'app/components/Title';
 import { SubTitle } from 'app/components/SubTitle';
-import { signInPageUrl } from '@codesandbox/common/lib/utils/url-generator';
-import { hasLogIn } from '@codesandbox/common/lib/utils/user';
+import { signInPageUrl } from '../../utils/url-generator';
+import { hasLogIn } from '../../utils/user';
 import Content from '../Content';
 import Sidebar from '../Sidebar';
 import { Container, Fullscreen, Moving } from './elements';
@@ -34,40 +33,7 @@ import { getTheme } from '../../theme';
 // new Map.
 new Map(); // eslint-disable-line
 
-type State = {
-  notFound: boolean,
-  sandbox: ?Sandbox,
-  fontSize: number,
-  showEditor: boolean,
-  showPreview: boolean,
-  previewWindow: string,
-  isInProjectView: boolean,
-  currentModule: string,
-  initialPath: string,
-  sidebarOpen: boolean,
-  autoResize: boolean,
-  hideNavigation: boolean,
-  enableEslint: boolean,
-  useCodeMirror: boolean,
-  editorSize: number,
-  forceRefresh: boolean,
-  expandDevTools: boolean,
-  hideDevTools: boolean,
-  runOnClick: boolean,
-  verticalMode: boolean,
-  highlightedLines: Array<number>,
-  tabs?: Array<number>,
-  theme: string,
-};
-
-export default class App extends React.PureComponent<
-  {
-    id?: string,
-    embedOptions?: Object,
-    sandbox?: any,
-  },
-  State
-> {
+export default class App extends React.PureComponent {
   constructor(props) {
     super(props);
 
@@ -141,7 +107,7 @@ export default class App extends React.PureComponent<
 
   getAppOrigin = () => location.origin.replace('embed.', '');
 
-  fetchSandbox = async (id: string) => {
+  fetchSandbox = async (id) => {
     if (id === 'custom') {
       await new Promise(resolve => {
         window.parent.postMessage('ready', '*');
@@ -203,12 +169,8 @@ export default class App extends React.PureComponent<
 
   setMixedView = () => this.setState({ showEditor: true, showPreview: true });
 
-  setCurrentModule = (id: string) => {
-    const newState: {
-      currentModule: string,
-      showEditor?: boolean,
-      showPreview?: boolean,
-    } = { currentModule: id };
+  setCurrentModule = (id) => {
+    const newState = { currentModule: id };
 
     if (!this.state.showEditor) {
       newState.showEditor = true;
@@ -225,11 +187,11 @@ export default class App extends React.PureComponent<
     this.setState(state => ({ sidebarOpen: !state.sidebarOpen }));
 
   // eslint-disable-next-line
-  setProjectView = (sandboxId?: ?string, isOpen: boolean, cb: Function) => {
+  setProjectView = (sandboxId, isOpen, cb) => {
     return this.setState({ isInProjectView: isOpen }, cb);
   };
 
-  getCurrentModuleFromPath = (sandbox: Sandbox): Module => {
+  getCurrentModuleFromPath = (sandbox) => {
     const { currentModule: currentModulePath } = this.state;
 
     return findCurrentModule(

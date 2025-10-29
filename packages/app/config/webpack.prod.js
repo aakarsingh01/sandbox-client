@@ -45,14 +45,17 @@ module.exports = merge(commonConfig, {
             // https://github.com/facebook/create-react-app/issues/2488
             ascii_only: true,
           },
+          compress: {
+            // Reduce memory usage for large files
+            passes: 1,
+            unsafe: false,
+          },
         },
-        // Use multi-process parallel running to improve the build speed
-        // Default number of concurrent runs: os.cpus().length - 1
-        // Disabled on WSL (Windows Subsystem for Linux) due to an issue with Terser
-        // https://github.com/webpack-contrib/terser-webpack-plugin/issues/21
-        parallel: 2,
+        // Reduce parallel processing to avoid EPIPE errors with large files
+        parallel: 1,
         cache: true,
         sourceMap: true,
+        extractComments: false,
       }),
     ],
     concatenateModules: true, // ModuleConcatenationPlugin

@@ -1,0 +1,172 @@
+# Simple Docker Compose for CodeSandbox Client
+# Just builds and serves the app with nginx
+
+version: '3.8'
+
+services:
+  codesandbox:
+    build:
+      context: .
+      dockerfile: Dockerfile.simple
+    container_name: codesandbox-client
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+
+  # ===============================================
+  # Development Environment
+  # ===============================================
+  codesandbox-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.comprehensive
+      target: development
+    container_name: codesandbox-client-dev
+    ports:
+      - "3000:3000"  # Main dev server
+      - "3001:3001"  # Hot reload
+      - "9009:9009"  # Storybook (if used)
+    environment:
+      - NODE_ENV=development
+      - FAST_REFRESH=true
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      # Mount source code for hot reloading
+      - ./src:/app/src:cached
+      - ./packages:/app/packages:cached
+      - ./public:/app/public:cached
+      # Exclude node_modules from volume for performance
+      - /app/node_modules
+    restart: unless-stopped
+    networks:
+      - codesandbox-network
+    labels:
+      - "com.codesandbox.service=client"
+      - "com.codesandbox.environment=development"
+
+  # ===============================================
+  # Bundler Service (Separate service for bundler files)
+  # ===============================================
+  codesandbox-bundler:
+    build:
+      context: .
+      dockerfile: Dockerfile.bundler
+    container_name: codesandbox-bundler
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    networks:
+      - codesandbox-network
+    labels:
+      - "com.codesandbox.service=bundler"
+
+  # ===============================================
+  # Load Balancer / Reverse Proxy (Optional)
+  # ===============================================
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: codesandbox-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - codesandbox-prod
+    restart: unless-stopped
+    networks:
+      - codesandbox-network
+    profiles:
+      - proxy
+    labels:
+      - "com.codesandbox.service=proxy"
+
+  # ===============================================
+  # Redis (for caching and sessions)
+  # ===============================================
+  redis:
+    image: redis:7-alpine
+    container_name: codesandbox-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - codesandbox-network
+    profiles:
+      - full-stack
+    labels:
+      - "com.codesandbox.service=redis"
+
+  # ===============================================
+  # Monitoring and Health Checks
+  # ===============================================
+  health-checker:
+    image: busybox
+    container_name: codesandbox-healthcheck
+    command: |
+      sh -c '
+        while true; do
+          echo "Checking services health..."
+          wget -qO- http://codesandbox-prod/health || echo "Main service unhealthy"
+          sleep 60
+        done
+      '
+    depends_on:
+      - codesandbox-prod
+    restart: unless-stopped
+    networks:
+      - codesandbox-network
+    profiles:
+      - monitoring
+
+# ===============================================
+# Networks
+# ===============================================
+networks:
+  codesandbox-network:
+    driver: bridge
+    name: codesandbox-network
+
+# ===============================================
+# Volumes
+# ===============================================
+volumes:
+  redis-data:
+    driver: local
+    name: codesandbox-redis-data
+
+# ===============================================
+# USAGE EXAMPLES:
+# ===============================================
+# 
+# Production deployment:
+#   docker-compose up codesandbox-prod
+#
+# Development environment:
+#   docker-compose up codesandbox-dev
+#
+# Full stack with Redis:
+#   docker-compose --profile full-stack up
+#
+# With load balancer:
+#   docker-compose --profile proxy up
+#
+# With monitoring:
+#   docker-compose --profile monitoring up
+#
+# Build and run specific service:
+#   docker-compose build codesandbox-prod
+#   docker-compose up codesandbox-prod
+#
+# Scale production service:
+#   docker-compose up --scale codesandbox-prod=3
+#
+# View logs:
+#   docker-compose logs -f codesandbox-prod
+#
+# Cleanup:
+#   docker-compose down -v --remove-orphans
+#

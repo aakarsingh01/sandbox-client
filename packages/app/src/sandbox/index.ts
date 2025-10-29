@@ -81,12 +81,14 @@ requirePolyfills().then(() => {
           });
         }
       } else if (data.type === 'sign-in') {
-        await requestSandpackSecretFromApp(data.teamId);
-
+        // In open-source mode, sign-in is handled externally
+        // We can optionally reload to pick up new environment tokens
+        console.log('Sign-in requested - reloading to pick up new tokens');
         window.location.reload();
       } else if (data.type === 'sign-out') {
+        // Clear any stored tokens
         removeSandpackSecret();
-
+        console.log('Sign-out completed - tokens cleared');
         window.location.reload();
       }
     }

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sandpack Open-Source Integration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1e1e1e;
+            color: #fff;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #2d2d2d;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.success { background: #0d5a2b; border: 1px solid #28a745; }
+        .status.error { background: #5a0d0d; border: 1px solid #dc3545; }
+        .status.info { background: #0d3b5a; border: 1px solid #007bff; }
+        iframe {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #555;
+            border-radius: 4px;
+        }
+        pre {
+            background: #1a1a1a;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sandpack Open-Source Integration Test</h1>
+        <p>This page tests the open-source Sandpack functionality including artifact export and anonymous mode.</p>
+
+        <div class="test-section">
+            <h2>Authentication Test</h2>
+            <div id="auth-status" class="status info">Testing authentication modes...</div>
+            <button onclick="testAnonymousMode()">Test Anonymous Mode</button>
+            <button onclick="testTokenMode()">Test Token Mode</button>
+            <button onclick="clearTokens()">Clear Tokens</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Sandpack Integration</h2>
+            <div id="sandpack-status" class="status info">Ready to test Sandpack...</div>
+            <button onclick="loadSandpack()">Load Sandpack Test</button>
+            <iframe id="sandpack-frame" src="about:blank" style="display: none;"></iframe>
+        </div>
+
+        <div class="test-section">
+            <h2>Artifact Export Test</h2>
+            <div id="artifact-status" class="status info">Waiting for artifacts...</div>
+            <div id="artifact-log"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Console Log</h2>
+            <pre id="console-log"></pre>
+        </div>
+    </div>
+
+    <script>
+        let artifactCount = 0;
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toISOString();
+            const logElement = document.getElementById('console-log');
+            logElement.textContent += `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+
+        function updateStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${type}`;
+        }
+
+        function testAnonymousMode() {
+            log('Testing anonymous mode - clearing all tokens');
+            localStorage.removeItem('sandpack_token');
+            delete window.SANDPACK_TOKEN;
+            delete window.CODESANDBOX_TOKEN;
+            updateStatus('auth-status', 'Anonymous mode activated - no tokens configured', 'success');
+        }
+
+        function testTokenMode() {
+            const testToken = 'test-token-' + Date.now();
+            log(`Testing token mode with token: ${testToken}`);
+            localStorage.setItem('sandpack_token', testToken);
+            window.SANDPACK_TOKEN = testToken;
+            updateStatus('auth-status', `Token mode activated - token: ${testToken}`, 'success');
+        }
+
+        function clearTokens() {
+            localStorage.removeItem('sandpack_token');
+            delete window.SANDPACK_TOKEN;
+            delete window.CODESANDBOX_TOKEN;
+            updateStatus('auth-status', 'All tokens cleared', 'info');
+            log('All authentication tokens cleared');
+        }
+
+        function loadSandpack() {
+            log('Loading Sandpack test iframe');
+            const iframe = document.getElementById('sandpack-frame');
+            
+            // Create a simple React sandbox URL
+            const sandboxUrl = window.location.origin + '/embed/new?file=/src/App.js&view=split&fontsize=14&hidenavigation=1&theme=dark';
+            
+            iframe.src = sandboxUrl;
+            iframe.style.display = 'block';
+            updateStatus('sandpack-status', 'Sandpack test loaded - check iframe above', 'success');
+        }
+
+        // Listen for artifact export messages
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'artifact-ready') {
+                artifactCount++;
+                log(`Received artifact #${artifactCount}`, 'success');
+                
+                const artifactData = event.data.data;
+                updateStatus('artifact-status', `Artifact received! Modules: ${artifactData.metadata?.totalModules || 'unknown'}`, 'success');
+                
+                // Display artifact details
+                const artifactLog = document.getElementById('artifact-log');
+                const artifactDiv = document.createElement('div');
+                artifactDiv.innerHTML = `
+                    <h4>Artifact #${artifactCount}</h4>
+                    <p><strong>Type:</strong> ${artifactData.type}</p>
+                    <p><strong>Template:</strong> ${artifactData.metadata?.template || 'unknown'}</p>
+                    <p><strong>Modules:</strong> ${artifactData.metadata?.totalModules || 0}</p>
+                    <p><strong>Dependencies:</strong> ${artifactData.metadata?.dependencies?.length || 0}</p>
+                    <details>
+                        <summary>Raw Data</summary>
+                        <pre>${JSON.stringify(artifactData, null, 2)}</pre>
+                    </details>
+                `;
+                artifactLog.appendChild(artifactDiv);
+                
+            } else if (event.data && event.data.codesandbox) {
+                log(`Received CodeSandbox message: ${event.data.type}`, 'info');
+            }
+        });
+
+        // Test page initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            log('Integration test page loaded');
+            
+            // Check for existing tokens
+            const localToken = localStorage.getItem('sandpack_token');
+            const envToken = window.SANDPACK_TOKEN || window.CODESANDBOX_TOKEN;
+            
+            if (localToken || envToken) {
+                updateStatus('auth-status', `Existing token found: ${localToken || envToken}`, 'success');
+            } else {
+                updateStatus('auth-status', 'No authentication tokens - anonymous mode active', 'info');
+            }
+            
+            log('Ready for testing');
+        });
+    </script>
+</body>
+</html>

@@ -51,6 +51,62 @@ let actionsEnabled = false;
 
 const debug = _debug('cs:compiler');
 
+// Artifact export functionality for LibreChat integration
+async function exportArtifacts(manager: Manager, modules: { [path: string]: Module }): Promise<void> {
+  try {
+    if (!manager) return;
+
+    // Get all transpiled modules from the manager
+    const transpiledModules = manager.getTranspiledModules();
+    const artifacts: { [path: string]: any } = {};
+
+    // Serialize the transpiled modules
+    Object.keys(transpiledModules).forEach(path => {
+      const module = transpiledModules[path];
+      if (module && module.source) {
+        artifacts[path] = {
+          code: module.source.compiledCode || module.source.code,
+          map: module.source.sourceMap,
+          originalCode: modules[path]?.code,
+          path: path,
+          isBinary: modules[path]?.isBinary || false,
+        };
+      }
+    });
+
+    // Create a bundle containing all artifacts
+    const bundle = {
+      type: 'sandpack-artifacts',
+      timestamp: Date.now(),
+      artifacts,
+      metadata: {
+        template: manager.preset?.name,
+        dependencies: Object.keys(manager.dependencies || {}),
+        totalModules: Object.keys(artifacts).length,
+      },
+    };
+
+    // Dispatch to parent window for LibreChat to capture
+    if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'artifact-ready',
+        data: bundle,
+        codesandbox: true,
+      }, '*');
+    }
+
+    // Also dispatch to the codesandbox-api system
+    dispatch({
+      type: 'artifact-export',
+      data: bundle,
+    });
+
+    console.log('Artifacts exported:', Object.keys(artifacts).length, 'modules');
+  } catch (error) {
+    console.error('Failed to export artifacts:', error);
+  }
+}
+
 export function areActionsEnabled() {
   return actionsEnabled;
 }
@@ -345,50 +401,54 @@ async function initializeManager(
   );
 
   /**
-   * If a team-id is provided, we can mount a registryUrl and proxy
-   * dependencies request through CSB proxy
+   * Open-source friendly dependency resolution
+   * Uses configurable token or falls back to anonymous mode with public registries
    */
   if (teamId) {
     const sandpackToken = getSandpackSecret();
+    
+    if (sandpackToken) {
+      // If token is available, try to use private registry
+      const domain = getProtocolAndHostWithSSE();
 
-    if (!sandpackToken) {
-      dispatch({
-        type: 'action',
-        action: 'show-error',
-        message: 'NPM_REGISTRY_UNAUTHENTICATED_REQUEST',
-      });
+      try {
+        const responseRegistry = await fetch(`${domain}/api/v1/sandpack/registry`, {
+          headers: { Authorization: `Bearer ${sandpackToken}` },
+        });
 
-      throw new Error('NPM_REGISTRY_UNAUTHENTICATED_REQUEST');
+        if (responseRegistry.ok) {
+          const registry = (await responseRegistry.json()) as {
+            auth_type: string;
+            enabled_scopes: string[];
+            limit_to_scopes: true;
+            proxy_enabled: false;
+            registry_auth_key: string;
+            registry_type: string;
+            registry_url: string;
+          };
+
+          customNpmRegistries.push({
+            enabledScopes: registry.enabled_scopes,
+            limitToScopes: registry.limit_to_scopes,
+            proxyEnabled: registry.proxy_enabled,
+            registryUrl:
+              registry.registry_url || `${domain}/api/v1/sandpack/registry/`,
+            registryAuthToken: registry.registry_auth_key || sandpackToken,
+            registryAuthType: registry.auth_type,
+          });
+        } else {
+          console.warn('Private registry unavailable, falling back to public npm');
+          // Token might be invalid, remove it
+          removeSandpackSecret();
+        }
+      } catch (error) {
+        console.warn('Failed to connect to private registry, using public npm:', error);
+        // Continue with public npm registry (default behavior)
+      }
+    } else {
+      console.info('No sandpack token available, using public npm registry');
+      // Continue with default npm registry behavior
     }
-
-    const domain = getProtocolAndHostWithSSE();
-
-    const responseRegistry = await fetch(`${domain}/api/v1/sandpack/registry`, {
-      headers: { Authorization: `Bearer ${sandpackToken}` },
-    }).catch(() => {
-      removeSandpackSecret();
-      throw new Error('NPM_REGISTRY_UNAUTHENTICATED_REQUEST');
-    });
-
-    const registry = (await responseRegistry.json()) as {
-      auth_type: string;
-      enabled_scopes: string[];
-      limit_to_scopes: true;
-      proxy_enabled: false;
-      registry_auth_key: string;
-      registry_type: string;
-      registry_url: string;
-    };
-
-    customNpmRegistries.push({
-      enabledScopes: registry.enabled_scopes,
-      limitToScopes: registry.limit_to_scopes,
-      proxyEnabled: registry.proxy_enabled,
-      registryUrl:
-        registry.registry_url || `${domain}/api/v1/sandpack/registry/`,
-      registryAuthToken: registry.registry_auth_key || sandpackToken,
-      registryAuthType: registry.auth_type,
-    });
   }
 
   // Add the custom registered npm registries
@@ -917,6 +977,9 @@ async function compile(opts: CompileOptions) {
     dispatch({
       type: 'success',
     });
+
+    // Export artifacts for LibreChat integration
+    await exportArtifacts(manager, modules);
 
     saveCache(managerModuleToTranspile, manager, changedModuleCount, firstLoad);
 

@@ -41,6 +41,72 @@ SANDPACK_BUNDLER_URL=http://your-bundler-url
 
 That's it! LibreChat will now use your self-hosted bundler for code execution.
 
+### Artifact Export
+
+This fork includes enhanced artifact export functionality specifically for LibreChat:
+
+- After successful compilation, transpiled modules are automatically serialized
+- A `postMessage` event (`artifact-ready`) is dispatched to the parent window
+- LibreChat can capture this event to download/process the compiled bundle
+- The artifact includes source maps, original code, and metadata
+
+## Open-Source Configuration
+
+This fork has been modified to remove dependencies on CodeSandbox-only services while preserving the Sandpack runtime. Here are the configuration options:
+
+### Authentication Modes
+
+#### Anonymous Mode (Default)
+The bundler works without any authentication tokens by falling back to public npm registries:
+
+```javascript
+// No configuration needed - works out of the box
+```
+
+#### Token-Based Authentication
+For private npm registries or enhanced features, configure a token:
+
+```javascript
+// Option 1: Environment variable (set on window object)
+window.SANDPACK_TOKEN = 'your-token-here';
+
+// Option 2: Alternative environment variable
+window.CODESANDBOX_TOKEN = 'your-token-here';
+
+// Option 3: Programmatically via localStorage
+localStorage.setItem('sandpack_token', 'your-token-here');
+```
+
+### Host Configuration
+
+Configure custom hosts for different environments:
+
+```javascript
+// Custom Sandpack host (for private deployments)
+window.SANDPACK_HOST = 'https://your-sandpack-host.com';
+
+// Custom CodeSandbox host (for API endpoints)
+window.CODESANDBOX_HOST = 'https://your-codesandbox-host.com';
+
+// Analytics endpoint (optional)
+window.ANALYTICS_ENDPOINT = 'https://your-analytics-endpoint.com';
+```
+
+### Template Definitions
+
+The bundler includes built-in template definitions for common frameworks:
+- React, Vue, Angular, Node.js, TypeScript, Vanilla JS
+- Custom templates can be added by modifying the template definitions
+- Templates include color schemes and build configurations
+
+### Dependency Resolution
+
+The bundler now supports multiple npm registry strategies:
+
+1. **Public npm** (default): Uses public npm registry for all dependencies
+2. **Mixed mode**: Uses private registry for scoped packages, public for others
+3. **Private registry**: All dependencies from a configured private registry
+
 ## Self-Hosting Considerations
 
 When hosting the bundler files, you're responsible for configuring your web server appropriately. Our Docker image includes a basic Nginx configuration, but if you're serving the files yourself, you'll need to handle:
@@ -79,6 +145,47 @@ If you encounter issues:
 2. **Missing Files**: Ensure all files were extracted and are being served correctly
 3. **Worker Files**: Some browsers might block worker files if content types are incorrect
 
+### Open-Source Specific Issues
+
+1. **NPM Registry Errors**: 
+   - Check if `SANDPACK_TOKEN` is configured if using private packages
+   - Verify network access to npm registries
+   - In anonymous mode, only public packages are accessible
+
+2. **Authentication Issues**:
+   - Tokens are stored in localStorage or provided via window environment
+   - Sign-in/sign-out flows reload the iframe to pick up new tokens
+   - Check browser console for authentication warnings
+
+3. **Artifact Export Not Working**:
+   - Ensure parent window is listening for `artifact-ready` messages
+   - Check browser console for export errors
+   - Verify the bundler completed compilation successfully
+
+4. **Template/Framework Issues**:
+   - Built-in templates should work without configuration
+   - Custom templates may need manual definition
+   - Check template name matches available definitions
+
+## Integration Testing
+
+This fork includes integration tests to verify open-source functionality:
+
+```bash
+# Start the test server
+cd integration-tests
+node test-runner.js
+
+# Open http://localhost:8081 in your browser
+# Follow the on-screen test instructions
+```
+
+The integration tests verify:
+- Anonymous mode operation (no authentication required)
+- Token-based authentication
+- Artifact export functionality
+- Sandpack compilation without CodeSandbox services
+
 ## Building From Source
 
 If you want to build the bundler yourself:
@@ -90,6 +197,18 @@ If you want to build the bundler yourself:
   - Or, run: `lerna run build --scope @codesandbox/common --scope @codesandbox/components --scope app`
 5. Run `yarn build:sandpack`
 6. The built files will be in the `www` directory
+
+### Build Verification
+
+After building, you can test with:
+
+```bash
+# Serve the built files
+cd www && python3 -m http.server 8080
+
+# Run integration tests
+cd integration-tests && node test-runner.js
+```
 
 ## For More Information
 
