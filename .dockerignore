@@ -50,7 +50,7 @@ logs
 
 # Production builds (will be created during build)
 build
-www
+# www  # Keep www for pre-built deployments
 .deliver
 dist
 .next
@@ -64,21 +64,18 @@ docs/
 **/*.md
 !packages/**/README.md
 
-# Standalone packages that might be large
+# Standalone packages that might be large (but keep essential build files)
 standalone-packages/monaco-editor-core
 standalone-packages/vscode-extensions
-standalone-packages/codesandbox-browserfs
 standalone-packages/vscode-textmate
-standalone-packages/monaco-typescript
-standalone-packages/vscode-editor
-standalone-packages/monaco-editor
-standalone-packages/resolver
+# Exclude node_modules from standalone packages but keep build files
 standalone-packages/*/node_modules
-standalone-packages/*/dist
-standalone-packages/*/build
+standalone-packages/codesandbox-browserfs/node_modules
+standalone-packages/codesandbox-browserfs/test
+standalone-packages/codesandbox-browserfs/src
+standalone-packages/codesandbox-browserfs/scripts
 
-# Large build artifacts
-www
+# Large build artifacts (but keep www for pre-built deployments)
 
 # Cache directories
 .cache
