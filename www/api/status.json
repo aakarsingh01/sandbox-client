@@ -1,0 +1,12 @@
+{
+  "status": "ok",
+  "mode": "offline",
+  "message": "CodeSandbox is running in offline mode",
+  "features": {
+    "sandpack": false,
+    "bundler": false,
+    "analytics": false,
+    "telemetry": false
+  },
+  "version": "self-hosted"
+}
