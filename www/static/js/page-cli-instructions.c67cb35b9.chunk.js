@@ -1,0 +1,22 @@
+(this.csbJsonP=this.csbJsonP||[]).push([["page-cli-instructions"],{"../common/lib/components/flex/MaxWidth.js":function(e,t,n){"use strict";var o=this&&this.__createBinding||(Object.create?function(e,t,n,o){void 0===o&&(o=n);var i=Object.getOwnPropertyDescriptor(t,n);i&&!("get"in i?!t.__esModule:i.writable||i.configurable)||(i={enumerable:!0,get:function(){return t[n]}}),Object.defineProperty(e,o,i)}:function(e,t,n,o){void 0===o&&(o=n),e[o]=t[n]}),i=this&&this.__setModuleDefault||(Object.create?function(e,t){Object.defineProperty(e,"default",{enumerable:!0,value:t})}:function(e,t){e.default=t}),r=this&&this.__importStar||function(e){if(e&&e.__esModule)return e;var t={};if(null!=e)for(var n in e)"default"!==n&&Object.prototype.hasOwnProperty.call(e,n)&&o(t,e,n);return i(t,e),t},s=this&&this.__importDefault||function(e){return e&&e.__esModule?e:{default:e}};Object.defineProperty(t,"__esModule",{value:!0});const a=s(n("../../node_modules/react/index.js")),l=r(n("../../node_modules/styled-components/dist/styled-components.browser.esm.js")),c=l.default.div`
+  box-sizing: border-box;
+  display: flex;
+
+  padding: 0 2rem;
+
+  width: 100%;
+  justify-content: center;
+
+  ${e=>e.responsive&&l.css`
+      @media (max-width: 768px) {
+        padding: 0;
+      }
+    `};
+`,d=l.default.div`
+  width: 100%;
+  max-width: ${e=>e.width}px;
+`;t.default=({children:e,width:t=1280,className:n,responsive:o=!1})=>a.default.createElement(c,{responsive:o},a.default.createElement(d,{className:n,width:t},e))},"../common/lib/components/spacing/Margin.js":function(e,t,n){"use strict";var o=this&&this.__importDefault||function(e){return e&&e.__esModule?e:{default:e}};Object.defineProperty(t,"__esModule",{value:!0}),t.Margin=void 0;const i=o(n("../../node_modules/styled-components/dist/styled-components.browser.esm.js")),r=o(n("../common/lib/components/spacing/get-spacing.js"));t.Margin=i.default.div`
+  margin: ${r.default};
+  box-sizing: border-box;
+`,t.default=t.Margin},"../common/lib/components/spacing/get-spacing.js":function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.default=function({margin:e,top:t,right:n,left:o,bottom:i,horizontal:r,vertical:s}){return`${[t,s,e].find(e=>null!=e)||0}rem ${[n,r,e].find(e=>null!=e)||0}rem ${[i,s,e].find(e=>null!=e)||0}rem ${[o,r,e].find(e=>null!=e)||0}rem`}},"./src/app/pages/CliInstructions/index.tsx":function(e,t,n){"use strict";n.r(t),n.d(t,"CLIInstructions",(function(){return M}));var o=n("../common/lib/components/flex/MaxWidth.js"),i=n.n(o),r=n("../common/lib/components/spacing/Margin.js"),s=n.n(r),a=n("../../node_modules/react/index.js"),l=n.n(a),c=n("./src/app/components/SubTitle.ts"),d=n("./src/app/components/Title.ts"),u=n("./src/app/overmind/index.ts"),m=n("./src/app/pages/common/Navigation/index.tsx"),p=n("../components/lib/index.js"),f=n("../../node_modules/@babel/runtime/helpers/taggedTemplateLiteral.js"),b=n.n(f),g=n("../../node_modules/styled-components/dist/styled-components.browser.esm.js"),h=n("../common/lib/components/flex/Centered.js"),_=n.n(h);function j(){const e=b()(["\n  margin-bottom: 1rem;\n  color: ",";\n"]);return j=function(){return e},e}function v(){const e=b()(["\n  max-width: 50em;\n  margin: auto;\n  margin-top: 10%;\n"]);return v=function(){return e},e}function x(){const e=b()(["\n  height: 100%;\n  width: 100%;\n  margin: 1rem;\n"]);return x=function(){return e},e}const y=g.default.div.withConfig({displayName:"elements__Container",componentId:"wlqcbj-0"})(x()),w=Object(g.default)(_.a).withConfig({displayName:"elements__Content",componentId:"wlqcbj-1"})(v()),E=g.default.pre.withConfig({displayName:"elements__Code",componentId:"wlqcbj-2"})(j(),e=>e.theme.light?"rgba(0, 0, 0, 0.7)":"rgba(255, 255, 255, 0.7)"),M=()=>{const e=Object(u.b)().cliInstructionsMounted;return Object(a.useEffect)(()=>{e()},[e]),l.a.createElement(p.Element,{style:{width:"100vw",height:"100vh"}},l.a.createElement(m.a,{title:"CLI Import"}),l.a.createElement(i.a,null,l.a.createElement(s.a,{horizontal:1.5,vertical:1.5},l.a.createElement(y,null,l.a.createElement(w,{vertical:!0},l.a.createElement(d.a,null,"Import from CLI"),l.a.createElement(c.a,null,"1. Install the CLI ",l.a.createElement(E,null,"npm i -g codesandbox")),l.a.createElement(c.a,null,"2. Go to your project ",l.a.createElement(E,null,"cd path-of-your-project")),l.a.createElement(c.a,null,"3. Deploy your project to CodeSandbox"," ",l.a.createElement(E,null,"codesandbox ./")))))))}}}]);
+//# sourceMappingURL=page-cli-instructions.c67cb35b9.chunk.js.map
