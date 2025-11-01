@@ -1,0 +1,54 @@
+{
+  "bundler": {
+    "url": "/",
+    "timeout": 30000,
+    "endpoints": {
+      "compile": "/bundler/compile",
+      "eval": "/bundler/eval",
+      "status": "/bundler/status"
+    }
+  },
+  "transpilers": {
+    "babel": {
+      "url": "/babel-transpiler.c2fa457d.worker.js",
+      "extensions": [".js", ".jsx", ".ts", ".tsx"],
+      "config": {
+        "presets": ["@babel/preset-env", "@babel/preset-react", "@babel/preset-typescript"]
+      }
+    },
+    "typescript": {
+      "url": "/typescript-transpiler.fd0f218e.worker.js",
+      "extensions": [".ts", ".tsx"],
+      "config": {
+        "compilerOptions": {
+          "target": "ES2015",
+          "module": "ESNext",
+          "jsx": "react",
+          "strict": false
+        }
+      }
+    },
+    "sass": {
+      "url": "/sass-transpiler.793e6543.worker.js",
+      "extensions": [".scss", ".sass"]
+    },
+    "vue": {
+      "url": "/vue-transpiler.worker.js",
+      "extensions": [".vue"]
+    },
+    "svelte": {
+      "url": "/svelte-transpiler.7dfe10ad.worker.js",
+      "extensions": [".svelte"]
+    }
+  },
+  "dependencies": {
+    "resolver": "browser",
+    "cdns": [
+      "https://unpkg.com",
+      "https://cdn.jsdelivr.net/npm",
+      "https://cdn.skypack.dev",
+      "https://esm.sh"
+    ],
+    "proxy": "/npm/"
+  }
+}

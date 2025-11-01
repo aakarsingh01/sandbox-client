@@ -1,12 +1,24 @@
 {
   "status": "ok",
-  "mode": "offline",
-  "message": "CodeSandbox is running in offline mode",
+  "mode": "self-hosted",
+  "message": "CodeSandbox is running in self-hosted mode with bundler enabled",
   "features": {
-    "sandpack": false,
-    "bundler": false,
+    "sandpack": true,
+    "bundler": true,
+    "transpilers": true,
+    "externalDeps": true,
     "analytics": false,
     "telemetry": false
   },
-  "version": "self-hosted"
+  "bundler": {
+    "status": "ready",
+    "transpilers": ["babel", "typescript", "sass", "less", "stylus", "vue", "svelte", "postcss"],
+    "cdnEndpoints": [
+      "https://unpkg.com",
+      "https://cdn.jsdelivr.net/npm",
+      "https://cdn.skypack.dev",
+      "https://esm.sh"
+    ]
+  },
+  "version": "self-hosted-v1.0"
 }
